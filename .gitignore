@@ -1,0 +1,7 @@
+pyvenv.cfg
+.tmp
+.asm
+*test*
+.exe
+.o
+.bin
