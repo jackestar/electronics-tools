@@ -5,3 +5,6 @@ pyvenv.cfg
 .exe
 .o
 .bin
+.vscode
+.lock
+target
