@@ -1,11 +1,11 @@
 # Practica de Laboratorio #1 – Amplificador de Doble Etapa (Electrónica II)
 
-## Archivos de simulacion (LTspice)
+## Archivos de simulación (LTspice)
 
 * [PrimeraEtapa-EC.asc](./PrimeraEtapa-EC.asc)
 * [SegundaEtapa-CC.asc](./SegundaEtapa-CC.asc)
 
-## Calculos (Python)
+## Cálculos (Python)
 
 * [collector-common.py](./collector-common.py)
 * [emitter-common.py](./emitter-common.py)
@@ -18,7 +18,7 @@ mpmath
 numpy
 sympy
 ```
-**Instalacion**
+**Instalación**
 
 ```console
 pip install -r requirements.txt
