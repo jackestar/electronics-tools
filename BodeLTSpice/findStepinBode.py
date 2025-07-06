@@ -146,45 +146,105 @@ def find_best_step(all_steps_data, target_freq, target_gain_db):
 
     return best_match
 
+def find_minus3db_points(all_steps_data):
+    """
+    For each step, finds the frequency where the gain is closest to (peak gain - 3 dB).
+    Returns a list of dictionaries with info for each step.
+    """
+    results = []
+    for step in all_steps_data:
+        if not step['data']:
+            continue
+        # Find peak gain for this step
+        peak_gain = max(point['gain_db'] for point in step['data'])
+        target_gain = peak_gain - 3
+        # Find the point closest to target_gain
+        closest_point = min(
+            step['data'],
+            key=lambda point: abs(point['gain_db'] - target_gain)
+        )
+        results.append({
+            'step_info': step['info'],
+            'ck_value': step['ck_value'],
+            'peak_gain': peak_gain,
+            'target_gain': target_gain,
+            'found_freq': closest_point['freq'],
+            'found_gain_db': closest_point['gain_db'],
+            'gain_difference': abs(closest_point['gain_db'] - target_gain)
+        })
+    return results
+
+def find_step_closest_to_minus3db_at_freq(all_steps_data, target_freq):
+    """
+    For each step, finds the peak gain, computes (peak gain - 3),
+    then finds the gain at the target frequency (or closest frequency in that step),
+    and returns the step whose gain at that frequency is closest to (peak gain - 3).
+    """
+    results = []
+    for step in all_steps_data:
+        if not step['data']:
+            continue
+        # Find peak gain for this step
+        peak_gain = max(point['gain_db'] for point in step['data'])
+        target_gain = peak_gain - 3
+        # Find the point in this step closest to the target frequency
+        closest_point = min(
+            step['data'],
+            key=lambda point: abs(point['freq'] - target_freq)
+        )
+        gain_at_freq = closest_point['gain_db']
+        freq_at_freq = closest_point['freq']
+        gain_diff = abs(gain_at_freq - target_gain)
+        results.append({
+            'step_info': step['info'],
+            'ck_value': step['ck_value'],
+            'peak_gain': peak_gain,
+            'target_gain': target_gain,
+            'freq': freq_at_freq,
+            'gain_at_freq': gain_at_freq,
+            'gain_difference': gain_diff
+        })
+    # Find the step whose gain at the target frequency is closest to (peak gain - 3)
+    if results:
+        return min(results, key=lambda res: res['gain_difference'])
+    else:
+        return None
+
 # --- Main execution part of the script ---
 if __name__ == "__main__":
-    # Usage: python findStepinBode.py <datafile.txt> <frequency> <gain>
-    if len(sys.argv) < 4:
-        print("Usage: python findStepinBode.py <datafile.txt> <frequency> <gain>")
+    # Usage: python findStepinBode.py <datafile.txt> <frequency>
+    if len(sys.argv) < 3:
+        print("Usage: python findStepinBode.py <datafile.txt> <frequency>")
         sys.exit(1)
     file_path = sys.argv[1]
     try:
         target_freq = float(sys.argv[2])
-        target_gain_db = float(sys.argv[3])
-        print(f"\nYou entered: Frequency = {target_freq} Hz, Gain = {target_gain_db} dB")
+        print(f"\nYou entered: Frequency = {target_freq} Hz")
     except ValueError:
-        print("\nError: Invalid input. Please enter numeric values for frequency and gain.")
+        print("\nError: Invalid input. Please enter a numeric value for frequency.")
         exit()
 
-    # 2. Parse the file
     print("\nParsing file...")
     parsed_data = parse_data_file(file_path)
 
     if parsed_data:
         print(f"Successfully parsed {len(parsed_data)} steps.")
-        
-        # 3. Find the best match
-        print("Searching for the best match...")
-        result = find_best_step(parsed_data, target_freq, target_gain_db)
-
-        # 4. Display the result
-        if result:
+        closest = find_step_closest_to_minus3db_at_freq(parsed_data, target_freq)
+        if closest:
             print("\n" + "="*40)
-            print("         BEST MATCH FOUND")
+            print("   STEP CLOSEST TO -3dB AT YOUR FREQUENCY")
             print("="*40)
             print(f"Target Frequency: {target_freq:.4g} Hz")
-            print(f"Target Gain:      {target_gain_db:.4f} dB")
             print("-" * 40)
-            print(f"Best Step Info:   {result['step_info']}")
-            print(f"--> Ck Value:       {result['ck_value']}")
-            print(f"\nThis step's closest frequency was {result['found_freq']:.4g} Hz.")
-            print(f"At that frequency, the gain is {result['found_gain_db']:.4f} dB.")
-            print(f"(Difference from target gain: {result['gain_difference']:.4f} dB)")
+            print(f"Step Info:   {closest['step_info']}")
+            print(f"Ck Value:    {closest['ck_value']}")
+            print(f"Peak Gain:   {closest['peak_gain']:.4f} dB")
+            print(f"-3dB Gain:   {closest['target_gain']:.4f} dB")
+            print(f"Freq Used:   {closest['freq']:.4g} Hz")
+            print(f"Gain at Freq:{closest['gain_at_freq']:.4f} dB")
+            print(f"Difference:  {closest['gain_difference']:.4f} dB")
             print("="*40)
         else:
-            print("\nCould not find a suitable match in the provided data.")
+            print("\nNo valid steps found in the data.")
+    else:
+        print("\nCould not parse any steps from the provided data.")
