@@ -8,22 +8,27 @@ if len(sys.argv) < 2:
 filename = sys.argv[1]
 
 df = pd.read_csv(filename, sep='\t')
-max_vout_row = df.loc[df['V(out)'].idxmax()]
-min_vout_row = df.loc[df['V(out)'].idxmin()]
 
-highest_vout = max_vout_row['V(out)']
-time_at_highest_vout = max_vout_row['time']
+signals = [col for col in df.columns if col != 'time']
 
-lowest_vout = min_vout_row['V(out)']
-time_at_lowest_vout = min_vout_row['time']
+for signal in signals:
+    max_row = df.loc[df[signal].idxmax()]
+    min_row = df.loc[df[signal].idxmin()]
 
-peak_to_peak = highest_vout - lowest_vout
-amplitude = peak_to_peak/2
-mid = (highest_vout + lowest_vout)/2
+    highest = max_row[signal]
+    time_at_highest = max_row['time']
 
-print(f"The highest value of V(out) is: {highest_vout:.6f} (at time {time_at_highest_vout:.6f})")
-print(f"The lowest value of V(out) is: {lowest_vout:.6f} (at time {time_at_lowest_vout:.6f})")
-print(f"Peak-to-peak value is: {peak_to_peak:.6f}")
-print(f"mid value: {mid:.6f}")
-print(f"amplitude value: {amplitude:.6f}")
+    lowest = min_row[signal]
+    time_at_lowest = min_row['time']
+
+    peak_to_peak = highest - lowest
+    amplitude = peak_to_peak / 2
+    mid = (highest + lowest) / 2
+
+    print(f"\nSignal: {signal}")
+    print(f"  Highest value: {highest:.6f} (at time {time_at_highest:.6f})")
+    print(f"  Lowest value:  {lowest:.6f} (at time {time_at_lowest:.6f})")
+    print(f"  Peak-to-peak:  {peak_to_peak:.6f}")
+    print(f"  Mid value:     {mid:.6f}")
+    print(f"  Amplitude:     {amplitude:.6f}")
 
